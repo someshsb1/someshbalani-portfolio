@@ -141,23 +141,34 @@
     return resp.json();
   }
 
-  async function loadRecommendations() {
-    statusBox.textContent = "Loading your top tracks…";
-    const top = await api("/me/top/tracks?limit=5&market=from_token");
-    if (!top.items?.length) {
-      statusBox.textContent = "No top tracks available. Try listening more on Spotify first.";
-      return;
-    }
-    const seed = top.items.map(t => t.id).slice(0,5).join(",");
-    console.log("Seeds:", seed);
+async function loadRecommendations() {
+  statusBox.textContent = "Loading your top tracks…";
+  const top = await api("/me/top/tracks?limit=5&market=from_token");
 
-    statusBox.textContent = "Fetching recommendations…";
-    const rec = await api(`/recommendations?limit=30&market=from_token&seed_tracks=${encodeURIComponent(seed)}&target_energy=0.6&target_valence=0.6`);
-    lastRecs = rec.tracks || [];
-    renderRecs(lastRecs);
-    setLoggedInUI(true);
-    statusBox.textContent = `Got ${lastRecs.length} tracks.`;
+  if (!top.items?.length) {
+    statusBox.textContent = "No top tracks available. Try listening more on Spotify first.";
+    return;
   }
+
+  const seed = top.items.map(t => t.id).slice(0, 5).join(",");
+  console.log("Seeds:", seed);
+
+  if (!seed) {
+    statusBox.textContent = "Could not determine any seed tracks.";
+    return;
+  }
+
+  statusBox.textContent = "Fetching recommendations…";
+  const rec = await api(
+    `/recommendations?limit=30&market=from_token&seed_tracks=${encodeURIComponent(seed)}&target_energy=0.6&target_valence=0.6`
+  );
+
+  lastRecs = rec.tracks || [];
+  renderRecs(lastRecs);
+  setLoggedInUI(true);
+  statusBox.textContent = `Got ${lastRecs.length} tracks.`;
+}
+
 
   function renderRecs(tracks) {
     recsDiv.innerHTML = "";
