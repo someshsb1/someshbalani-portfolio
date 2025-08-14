@@ -19,7 +19,7 @@
     const body = new URLSearchParams({
       grant_type: "authorization_code",
       code,
-      redirect_uri: location.origin + location.pathname, // ends with /spotify/callback/
+      redirect_uri: "https://someshbalani.com/spotify/callback/", // ends with /spotify/callback/
       client_id: CLIENT_ID,
       code_verifier: verifier
     });
