@@ -55,6 +55,40 @@
     <div id="recsList" class="grid"></div>
   </div>
 
+  <!-- Som's public, always-visible showcase -->
+<section class="card" style="margin-top:0;">
+  <div class="row" style="justify-content:space-between; align-items:center;">
+    <h3 style="margin:0;">Som’s Picks (Public)</h3>
+    <a id="picksLink" target="_blank" rel="noopener">Open in Spotify</a>
+  </div>
+
+  <!-- Responsive Spotify embed -->
+  <div style="position:relative; margin-top:10px; border-radius:12px; overflow:hidden; height:400px;">
+    <iframe
+      id="picksEmbed"
+      style="position:absolute; inset:0; border:0;"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      loading="lazy"
+      width="100%" height="100%">
+    </iframe>
+  </div>
+
+  <p class="muted" style="margin-top:8px;">
+    Always visible—no login required. Updates automatically when you change the playlist in Spotify.
+  </p>
+</section>
+
+<script>
+  // Set these once with your playlist ID
+  const SHOWCASE_PLAYLIST_ID = "4OECwTE2IJAxASmYGhhX6E?si=qlO3jnlZQ_SLRA0Q4CsJ0w&nd=1&dlsi=b5ea9e64504c4997"; // e.g. 37i9dQZF1DXcBWIGoYBM5M
+  const picksEmbed = document.getElementById("picksEmbed");
+  const picksLink  = document.getElementById("picksLink");
+
+  picksEmbed.src = `https://open.spotify.com/embed/playlist/${SHOWCASE_PLAYLIST_ID}?utm_source=website`;
+  picksLink.href = `https://open.spotify.com/playlist/${SHOWCASE_PLAYLIST_ID}`;
+</script>
+
+
   <script>
   // ===== CONFIG =====
   const CLIENT_ID    = "633ae324f0cd47d184d021cb0d35b598";
