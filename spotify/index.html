@@ -62,9 +62,9 @@
 
   async function refreshIfNeeded(resp) {
     if (resp.status !== 401) return resp;
-    // try refresh
     const refreshToken = JSON.parse(localStorage.getItem(refreshKey) || "null");
     if (!refreshToken) return resp;
+
     const body = new URLSearchParams({
       grant_type: "refresh_token",
       refresh_token: refreshToken,
@@ -115,32 +115,44 @@
     recHeader.classList.toggle("hidden", !isLoggedIn || !lastRecs.length);
   }
 
-  async function api(path, init={}) {
-    const headers = { ...(init.headers||{}), ...(getAuthHeaders()||{}) };
-    let resp = await fetch(`https://api.spotify.com/v1${path}`, { ...init, headers });
-    const maybe = await refreshIfNeeded(resp);
-    if (maybe === null) {
-      // refreshed, retry
-      const headers2 = { ...(init.headers||{}), ...(getAuthHeaders()||{}) };
-      resp = await fetch(`https://api.spotify.com/v1${path}`, { ...init, headers: headers2 });
+  // Robust API helper: normalizes URL, logs on error, refresh-retries once
+  async function api(path, init = {}) {
+    const base = "https://api.spotify.com/v1";
+    const url = path.startsWith("http")
+      ? path
+      : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+
+    const headers = { ...(init.headers || {}), ...(getAuthHeaders() || {}) };
+    let resp = await fetch(url, { ...init, headers });
+
+    if (resp.status === 401) {
+      const maybe = await refreshIfNeeded(resp);
+      if (maybe === null) {
+        const headers2 = { ...(init.headers || {}), ...(getAuthHeaders() || {}) };
+        resp = await fetch(url, { ...init, headers: headers2 });
+      }
     }
+
     if (!resp.ok) {
-      const txt = await resp.text();
-      throw new Error(`Spotify API error: ${resp.status} ${txt}`);
+      const txt = await resp.text().catch(() => "<no body>");
+      console.error("Spotify API error:", resp.status, url, txt);
+      throw new Error(`Spotify API error: ${resp.status}`);
     }
     return resp.json();
   }
 
   async function loadRecommendations() {
     statusBox.textContent = "Loading your top tracks…";
-    const top = await api("/me/top/tracks?limit=5");
+    const top = await api("/me/top/tracks?limit=5&market=from_token");
     if (!top.items?.length) {
       statusBox.textContent = "No top tracks available. Try listening more on Spotify first.";
       return;
     }
     const seed = top.items.map(t => t.id).slice(0,5).join(",");
+    console.log("Seeds:", seed);
+
     statusBox.textContent = "Fetching recommendations…";
-    const rec = await api(`/recommendations?limit=30&seed_tracks=${seed}&target_energy=0.6&target_valence=0.6`);
+    const rec = await api(`/recommendations?limit=30&market=from_token&seed_tracks=${encodeURIComponent(seed)}&target_energy=0.6&target_valence=0.6`);
     lastRecs = rec.tracks || [];
     renderRecs(lastRecs);
     setLoggedInUI(true);
@@ -194,10 +206,19 @@
   });
   makePlaylistBtn.addEventListener("click", makePlaylist);
 
-  // If already logged in (token present), load recs immediately
+  // If already logged in (token present), sanity-check /me then load recs
   if (getAuthHeaders()) {
     setLoggedInUI(true);
-    loadRecommendations().catch(e => { statusBox.textContent = e.message; });
+    (async () => {
+      try {
+        const me = await api("/me");
+        console.log("ME OK:", me.id, me.display_name);
+        await loadRecommendations();
+      } catch (e) {
+        statusBox.textContent = "Auth looks off. Log out → Log in again. See console.";
+        console.error(e);
+      }
+    })();
   } else {
     setLoggedInUI(false);
   }
