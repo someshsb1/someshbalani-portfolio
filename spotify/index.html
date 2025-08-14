@@ -3,44 +3,64 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Spotify – Get User Profile</title>
+  <title>Spotify – Profile, Top Tracks & Recs</title>
   <style>
     :root { color-scheme: light dark; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 28px; line-height: 1.35; }
     h1 { margin: 0 0 8px 0; }
     .buttons { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 12px 0 18px; }
     button { padding: 10px 16px; border-radius: 10px; border: 1px solid #d0d0d0; cursor: pointer; background: transparent; }
-    .card { border: 1px solid #e5e5e5; border-radius: 14px; padding: 14px; }
+    .card { border: 1px solid #e5e5e5; border-radius: 14px; padding: 14px; margin-top: 16px; }
     .row { display: flex; gap: 14px; align-items: center; }
     .hidden { display: none; }
     img.avatar { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; }
     .muted { opacity: .75; }
-    a { text-decoration: none; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 12px; }
+    .track { border: 1px solid #eee; border-radius: 12px; padding: 10px; }
+    .track a { text-decoration: none; }
   </style>
 </head>
 <body>
-  <h1>Spotify: Get User Profile</h1>
-  <div class="muted">Demo on someshbalani.com — PKCE, no backend</div>
+  <h1>Spotify Demo</h1>
+  <div class="muted">Profile + Top Tracks + Recommendations (PKCE, no backend)</div>
 
   <div class="buttons">
     <button id="loginBtn">Log in with Spotify</button>
     <button id="logoutBtn" class="hidden">Log out</button>
+    <button id="topBtn" class="hidden">Show Top Tracks</button>
+    <button id="recsBtn" class="hidden">Get Recommendations</button>
   </div>
 
   <div id="status" class="muted"></div>
 
-  <div id="profile" class="card hidden" style="margin-top:16px;">
+  <div id="profile" class="card hidden">
     <h3 style="margin:0 0 10px;">Your Spotify Profile</h3>
     <div id="profileCard"></div>
   </div>
 
+  <div id="top" class="card hidden">
+    <div class="row" style="justify-content:space-between;">
+      <h3 style="margin:0;">Your Top Tracks</h3>
+      <button id="topPlaylistBtn">Save Top Tracks as Playlist</button>
+    </div>
+    <div id="topList" class="grid"></div>
+  </div>
+
+  <div id="recs" class="card hidden">
+    <div class="row" style="justify-content:space-between;">
+      <h3 style="margin:0;">Recommended For You</h3>
+      <button id="recsPlaylistBtn">Save Recommendations as Playlist</button>
+    </div>
+    <div class="muted" id="recsNote" style="margin-bottom:8px;"></div>
+    <div id="recsList" class="grid"></div>
+  </div>
+
   <script>
   // ===== CONFIG =====
-  // Use your actual Client ID and exact redirect URI you registered:
-  const CLIENT_ID   = "633ae324f0cd47d184d021cb0d35b598";
+  const CLIENT_ID    = "633ae324f0cd47d184d021cb0d35b598";
   const REDIRECT_URI = "https://someshbalani.com/spotify/callback/";
-  // Scopes needed to mirror the example; email is useful to display:
-  const SCOPES = ["user-read-email"].join(" ");
+  // Scopes: email (profile example), top-read, and playlist create
+  const SCOPES = ["user-read-email","user-top-read","playlist-modify-private"].join(" ");
 
   // ===== Utilities: PKCE + token storage =====
   function b64url(buffer) {
@@ -57,76 +77,69 @@
 
   const tokenKey = "spotify_token";
   const refreshKey = "spotify_refresh";
-
-  function getAccessToken() {
-    try { return JSON.parse(localStorage.getItem(tokenKey) || "null"); }
-    catch { return null; }
-  }
-  function setTokens(accessToken, refreshToken) {
-    if (accessToken) localStorage.setItem(tokenKey, JSON.stringify(accessToken));
-    if (refreshToken) localStorage.setItem(refreshKey, JSON.stringify(refreshToken));
-  }
-  function clearTokens() {
-    localStorage.removeItem(tokenKey);
-    localStorage.removeItem(refreshKey);
-  }
+  const getToken = () => { try { return JSON.parse(localStorage.getItem(tokenKey)||"null"); } catch { return null; } };
+  function setTokens(access, refresh) { if (access) localStorage.setItem(tokenKey, JSON.stringify(access)); if (refresh) localStorage.setItem(refreshKey, JSON.stringify(refresh)); }
+  function clearTokens() { localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); }
 
   // ===== API helper (handles refresh-once) =====
   async function refreshIfNeeded(resp) {
     if (resp.status !== 401) return resp;
     const rt = JSON.parse(localStorage.getItem(refreshKey) || "null");
     if (!rt) return resp;
-
-    const body = new URLSearchParams({
-      grant_type: "refresh_token",
-      refresh_token: rt,
-      client_id: CLIENT_ID,
-    });
-    const r = await fetch("https://accounts.spotify.com/api/token", {
-      method: "POST",
-      headers: {"Content-Type":"application/x-www-form-urlencoded"},
-      body
-    });
+    const body = new URLSearchParams({ grant_type:"refresh_token", refresh_token: rt, client_id: CLIENT_ID });
+    const r = await fetch("https://accounts.spotify.com/api/token", { method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body });
     if (!r.ok) return resp;
     const data = await r.json();
-    if (data.access_token) {
-      setTokens(data.access_token, data.refresh_token || rt);
-      return null; // signal to retry with new token
-    }
+    if (data.access_token) { setTokens(data.access_token, data.refresh_token || rt); return null; }
     return resp;
   }
-
-  async function api(path, init = {}) {
+  async function api(path, init={}) {
     const base = "https://api.spotify.com/v1";
     const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
-    const headers = { ...(init.headers||{}), ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}) };
+    const headers = { ...(init.headers||{}), ...(getToken() ? { Authorization:`Bearer ${getToken()}` } : {}) };
     let resp = await fetch(url, { ...init, headers });
-
     if (resp.status === 401) {
       const maybe = await refreshIfNeeded(resp);
       if (maybe === null) {
-        const headers2 = { ...(init.headers||{}), ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}) };
+        const headers2 = { ...(init.headers||{}), ...(getToken() ? { Authorization:`Bearer ${getToken()}` } : {}) };
         resp = await fetch(url, { ...init, headers: headers2 });
       }
     }
     if (!resp.ok) {
-      const txt = await resp.text().catch(() => "<no body>");
+      const txt = await resp.text().catch(()=>"<no body>");
       console.error("Spotify API error:", resp.status, url, txt);
       throw new Error(`Spotify API error: ${resp.status}`);
     }
     return resp.json();
   }
 
-  // ===== UI wiring =====
+  // ===== UI refs =====
   const loginBtn = document.getElementById("loginBtn");
   const logoutBtn = document.getElementById("logoutBtn");
+  const topBtn = document.getElementById("topBtn");
+  const recsBtn = document.getElementById("recsBtn");
   const statusBox = document.getElementById("status");
+
   const profileWrap = document.getElementById("profile");
   const profileCard = document.getElementById("profileCard");
+
+  const topWrap = document.getElementById("top");
+  const topList = document.getElementById("topList");
+  const topPlaylistBtn = document.getElementById("topPlaylistBtn");
+
+  const recsWrap = document.getElementById("recs");
+  const recsList = document.getElementById("recsList");
+  const recsPlaylistBtn = document.getElementById("recsPlaylistBtn");
+  const recsNote = document.getElementById("recsNote");
+
+  let lastTopTracks = [];
+  let lastRecs = [];
 
   function setLoggedInUI(isLoggedIn) {
     loginBtn.classList.toggle("hidden", isLoggedIn);
     logoutBtn.classList.toggle("hidden", !isLoggedIn);
+    topBtn.classList.toggle("hidden", !isLoggedIn);
+    recsBtn.classList.toggle("hidden", !isLoggedIn);
   }
 
   function renderProfile(p) {
@@ -145,18 +158,122 @@
     profileWrap.classList.remove("hidden");
   }
 
-  async function loadProfile() {
-    statusBox.textContent = "Loading profile…";
-    const me = await api("/me");      // ← this is the example's main call
-    console.log("ME:", me.id, me.display_name);
-    renderProfile(me);
-    statusBox.textContent = "Loaded.";
+  function renderTracks(container, tracks) {
+    container.innerHTML = "";
+    tracks.forEach(t => {
+      const artists = (t.artists||[]).map(a=>a.name).join(", ");
+      const img = t.album?.images?.[2]?.url || t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || "";
+      const div = document.createElement("div");
+      div.className = "track";
+      div.innerHTML = `
+        <div class="row">
+          ${img ? `<img src="${img}" width="56" height="56" style="border-radius:8px;object-fit:cover;" alt="">` : ""}
+          <div>
+            <div><strong>${t.name}</strong></div>
+            <div class="muted">${artists}</div>
+            <div><a href="${t.external_urls?.spotify}" target="_blank" rel="noopener">Open</a></div>
+          </div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
   }
 
+  async function createPlaylist(name, tracks) {
+    if (!tracks.length) return;
+    const me = await api("/me");
+    const pl = await api(`/users/${me.id}/playlists`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, public: false, description: "Created from someshbalani.com" })
+    });
+    const uris = tracks.map(t => `spotify:track:${t.id}`);
+    // chunk in groups of 100
+    for (let i = 0; i < uris.length; i += 100) {
+      await api(`/playlists/${pl.id}/tracks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uris: uris.slice(i, i+100) })
+      });
+    }
+    return pl.external_urls?.spotify;
+  }
+
+  // ===== Top Tracks =====
+  async function loadTopTracks() {
+    statusBox.textContent = "Loading your top tracks…";
+    const top = await api("/me/top/tracks?limit=20");
+    lastTopTracks = top.items || [];
+    renderTracks(topList, lastTopTracks);
+    topWrap.classList.remove("hidden");
+    statusBox.textContent = `Loaded ${lastTopTracks.length} top tracks.`;
+  }
+
+  // ===== Recommendations =====
+  async function tryRecommendationsViaAPI(seedTrackIds) {
+    const qs = new URLSearchParams({ limit: "30", seed_tracks: seedTrackIds.slice(0,5).join(",") });
+    const path = `/recommendations?${qs.toString()}`;
+    console.log("Attempt /recommendations:", path);
+    const rec = await api(path);
+    return rec.tracks || [];
+  }
+
+  async function fallbackRecommendationsWithoutAPI() {
+    // Blocker-proof: use related artists + their top tracks (no "recommendations" endpoints)
+    statusBox.textContent = "Building recs from related artists…";
+    const topArtists = await api("/me/top/artists?limit=5");
+    const artistIds = (topArtists.items||[]).map(a=>a.id);
+    const trackMap = new Map();
+
+    for (const a of artistIds) {
+      try {
+        const rel = await api(`/artists/${a}/related-artists`);
+        const picks = (rel.artists||[]).slice(0,3).map(x=>x.id);
+        for (const rid of picks) {
+          const tops = await api(`/artists/${rid}/top-tracks?market=US`);
+          (tops.tracks||[]).slice(0,2).forEach(t => {
+            if (!trackMap.has(t.id)) trackMap.set(t.id, t);
+          });
+        }
+      } catch (e) {
+        console.warn("related/artists path failed for", a, e);
+      }
+      if (trackMap.size >= 40) break; // enough
+    }
+    return Array.from(trackMap.values()).slice(0,30);
+  }
+
+  async function loadRecommendations() {
+    recsNote.textContent = "";
+    statusBox.textContent = "Preparing recommendations…";
+
+    // Ensure we have top tracks to seed
+    if (!lastTopTracks.length) {
+      const top = await api("/me/top/tracks?limit=10");
+      lastTopTracks = top.items || [];
+    }
+    const seeds = lastTopTracks.map(t => t.id);
+
+    // Try the official endpoint first
+    try {
+      const tracks = await tryRecommendationsViaAPI(seeds);
+      lastRecs = tracks;
+      recsNote.textContent = "Using Spotify recommendations API (seeded by your top tracks).";
+    } catch (e) {
+      console.warn("Official /recommendations failed (often due to blockers). Falling back.", e);
+      recsNote.textContent = "Your browser seems to block 'recommendations' calls. Showing recs built from related artists instead.";
+      lastRecs = await fallbackRecommendationsWithoutAPI();
+    }
+
+    renderTracks(recsList, lastRecs);
+    recsWrap.classList.remove("hidden");
+    statusBox.textContent = `Got ${lastRecs.length} recommendations.`;
+  }
+
+  // ===== Auth / wiring =====
   async function login() {
     const { verifier, challenge } = await pkcePair();
     sessionStorage.setItem("pkce_verifier", verifier);
-
     const url = new URL("https://accounts.spotify.com/authorize");
     url.search = new URLSearchParams({
       client_id: CLIENT_ID,
@@ -172,22 +289,41 @@
   loginBtn.addEventListener("click", login);
   logoutBtn.addEventListener("click", () => {
     clearTokens();
-    profileWrap.classList.add("hidden");
-    profileCard.innerHTML = "";
+    [profileWrap, topWrap, recsWrap].forEach(el => el.classList.add("hidden"));
+    profileCard.innerHTML = topList.innerHTML = recsList.innerHTML = "";
     statusBox.textContent = "Logged out.";
     setLoggedInUI(false);
   });
+  topBtn.addEventListener("click", () => loadTopTracks().catch(e => { statusBox.textContent = e.message; }));
+  recsBtn.addEventListener("click", () => loadRecommendations().catch(e => { statusBox.textContent = e.message; }));
 
-  // Auto-load if we already have a token
-  if (getAccessToken()) {
+  topPlaylistBtn.addEventListener("click", async () => {
+    try {
+      const url = await createPlaylist("Som – Top Tracks", lastTopTracks);
+      if (url) statusBox.innerHTML = `Playlist created: <a href="${url}" target="_blank" rel="noopener">Open on Spotify</a>`;
+    } catch (e) { statusBox.textContent = e.message; }
+  });
+  recsPlaylistBtn.addEventListener("click", async () => {
+    try {
+      const url = await createPlaylist("Som – Recommendations", lastRecs);
+      if (url) statusBox.innerHTML = `Playlist created: <a href="${url}" target="_blank" rel="noopener">Open on Spotify</a>`;
+    } catch (e) { statusBox.textContent = e.message; }
+  });
+
+  // Auto-load profile if we already have a token
+  (async () => {
+    if (!getToken()) { setLoggedInUI(false); return; }
     setLoggedInUI(true);
-    loadProfile().catch(e => {
+    try {
+      statusBox.textContent = "Loading profile…";
+      const me = await api("/me");
+      renderProfile(me);
+      statusBox.textContent = "Ready.";
+    } catch (e) {
       statusBox.textContent = "Could not load profile. Try Log out → Log in.";
       console.error(e);
-    });
-  } else {
-    setLoggedInUI(false);
-  }
+    }
+  })();
   </script>
 </body>
 </html>
