@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8" />
+<title>Spotify Callback</title>
+<body>
+  <p>Completing Spotify login…</p>
+  <script>
+  const CLIENT_ID = "633ae324f0cd47d184d021cb0d35b598";
+  const REDIRECT_BACK = "https://someshbalani.com/spotify/"; // your main page
+
+  async function exchange() {
+    const params = new URLSearchParams(location.search);
+    const code = params.get("code");
+    const verifier = sessionStorage.getItem("pkce_verifier");
+    if (!code || !verifier) {
+      location.replace(REDIRECT_BACK);
+      return;
+    }
+    const body = new URLSearchParams({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: location.origin + location.pathname, // ends with /spotify/callback/
+      client_id: CLIENT_ID,
+      code_verifier: verifier
+    });
+    const res = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body
+    });
+    if (!res.ok) {
+      console.error(await res.text());
+      location.replace(REDIRECT_BACK);
+      return;
+    }
+    const data = await res.json();
+    localStorage.setItem("spotify_token", JSON.stringify(data.access_token));
+    if (data.refresh_token) localStorage.setItem("spotify_refresh", JSON.stringify(data.refresh_token));
+    history.replaceState({}, "", "/spotify/callback/"); // clean URL
+    location.replace(REDIRECT_BACK);
+  }
+  exchange();
+  </script>
+</body>
+</html>
