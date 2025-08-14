@@ -29,7 +29,7 @@
   <script>
   // === CONFIG ===
   const CLIENT_ID = "633ae324f0cd47d184d021cb0d35b598";
-  const REDIRECT_URI = "https://someshbalani.com/spotify/callback/"; // must match Spotify Dashboard EXACTLY
+  const REDIRECT_URI = "https://someshbalani.com/spotify/callback/";
   const SCOPES = ["user-top-read", "playlist-modify-private"].join(" ");
 
   // === Helpers ===
@@ -84,13 +84,10 @@
     return resp;
   }
 
-  // Robust API helper
+  // Robust API helper with full URL + body logging
   async function api(path, init = {}) {
     const base = "https://api.spotify.com/v1";
-    const url = path.startsWith("http")
-      ? path
-      : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
-
+    const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
     const headers = { ...(init.headers || {}), ...(getAuthHeaders() || {}) };
     let resp = await fetch(url, { ...init, headers });
 
@@ -110,27 +107,11 @@
     return resp.json();
   }
 
-  // Probe /recommendations with progressively simpler params
-  async function recommendProbe(paramsObj) {
-    const attempts = [];
-
-    // 1) only seeds
-    attempts.push(new URLSearchParams({ limit: "30", ...paramsObj }));
-
-    // 2) seeds + market=US
-    attempts.push(new URLSearchParams({ limit: "30", market: "US", ...paramsObj }));
-
-    // 3) only first 3 items in whichever seed is present
-    const narrowed = new URLSearchParams({ limit: "30" });
-    for (const k of ["seed_tracks", "seed_artists"]) {
-      if (paramsObj[k]) {
-        narrowed.set(k, paramsObj[k].split(",").slice(0, 3).join(","));
-      }
-    }
-    attempts.push(narrowed);
-
+  // Try recommendations with various parameter sets
+  async function recommendProbe(paramsObjList) {
     let lastErr;
-    for (const qs of attempts) {
+    for (const paramsObj of paramsObjList) {
+      const qs = new URLSearchParams({ limit: "30", ...paramsObj });
       const path = `/recommendations?${qs.toString()}`;
       console.log("Trying recommendations:", path);
       try {
@@ -143,7 +124,29 @@
     throw lastErr;
   }
 
-  // === UI wiring + flows ===
+  // Build genre seeds: intersect available genre seeds with the user's top-artist genres
+  async function buildGenreSeeds() {
+    const avail = await api("/recommendations/available-genre-seeds");
+    const availSet = new Set(avail.genres || []);
+    const topArtists = await api("/me/top/artists?limit=10");
+    const userGenres = new Set();
+    (topArtists.items || []).forEach(a => (a.genres || []).forEach(g => userGenres.add(g.toLowerCase())));
+    // pick up to 5 that are in the allowed list; if none, fallback to popular generic ones
+    const chosen = [];
+    for (const g of userGenres) {
+      if (availSet.has(g)) {
+        chosen.push(g);
+        if (chosen.length === 5) break;
+      }
+    }
+    if (!chosen.length) {
+      // generic fallbacks that are always in avail list
+      ["pop","hip-hop","rock","dance","indie"].forEach(g => { if (availSet.has(g)) chosen.push(g); });
+    }
+    return chosen.slice(0, 5).join(",");
+  }
+
+  // === UI ===
   const loginBtn = document.getElementById("loginBtn");
   const logoutBtn = document.getElementById("logoutBtn");
   const makePlaylistBtn = document.getElementById("makePlaylistBtn");
@@ -175,7 +178,7 @@
   }
 
   async function loadRecommendations() {
-    // Track-based seeds
+    // 1) Track seeds
     statusBox.textContent = "Loading your top tracks…";
     const topTracks = await api("/me/top/tracks?limit=5");
     const seedTracks = (topTracks.items || []).map(t => t.id).slice(0, 5).join(",");
@@ -184,25 +187,48 @@
     try {
       if (seedTracks) {
         statusBox.textContent = "Fetching recommendations (tracks)…";
-        const rec = await recommendProbe({ seed_tracks: seedTracks });
+        const rec = await recommendProbe([
+          { seed_tracks: seedTracks },
+          { seed_tracks: seedTracks, market: "US" },
+          { seed_tracks: seedTracks.split(",").slice(0,3).join(",") }
+        ]);
         lastRecs = rec.tracks || [];
       }
     } catch (e) {
       console.warn("Track-seeded recommendations failed, will try artists.", e);
     }
 
-    // Artist-based seeds fallback
+    // 2) Artist seeds
     if (!lastRecs.length) {
       statusBox.textContent = "Loading your top artists…";
       const topArtists = await api("/me/top/artists?limit=5");
       const seedArtists = (topArtists.items || []).map(a => a.id).slice(0, 5).join(",");
       console.log("Seeds (artists):", seedArtists);
-
       if (seedArtists) {
-        statusBox.textContent = "Fetching recommendations (artists)…";
-        const rec2 = await recommendProbe({ seed_artists: seedArtists });
-        lastRecs = rec2.tracks || [];
+        try {
+          statusBox.textContent = "Fetching recommendations (artists)…";
+          const rec2 = await recommendProbe([
+            { seed_artists: seedArtists },
+            { seed_artists: seedArtists, market: "US" },
+            { seed_artists: seedArtists.split(",").slice(0,3).join(",") }
+          ]);
+          lastRecs = rec2.tracks || [];
+        } catch (e) {
+          console.warn("Artist-seeded recommendations failed, will try genres.", e);
+        }
       }
+    }
+
+    // 3) Genre seeds (should always succeed)
+    if (!lastRecs.length) {
+      statusBox.textContent = "Building genre-based recommendations…";
+      const genreSeeds = await buildGenreSeeds();
+      console.log("Seeds (genres):", genreSeeds);
+      const rec3 = await recommendProbe([
+        { seed_genres: genreSeeds },
+        { seed_genres: genreSeeds, market: "US" }
+      ]);
+      lastRecs = rec3.tracks || [];
     }
 
     if (!lastRecs.length) {
@@ -262,7 +288,7 @@
   });
   makePlaylistBtn.addEventListener("click", makePlaylist);
 
-  // If already logged in (token present), sanity-check /me then load recs
+  // If already logged in, sanity-check /me then load recs
   if (getAuthHeaders()) {
     setLoggedInUI(true);
     (async () => {
