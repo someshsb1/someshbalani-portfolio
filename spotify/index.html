@@ -79,12 +79,71 @@
     const data = await r.json();
     if (data.access_token) {
       setTokens(data.access_token, data.refresh_token || refreshToken);
-      return null; // signal caller to retry
+      return null;
     }
     return resp;
   }
 
-  // === UI ===
+  // Robust API helper
+  async function api(path, init = {}) {
+    const base = "https://api.spotify.com/v1";
+    const url = path.startsWith("http")
+      ? path
+      : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+
+    const headers = { ...(init.headers || {}), ...(getAuthHeaders() || {}) };
+    let resp = await fetch(url, { ...init, headers });
+
+    if (resp.status === 401) {
+      const maybe = await refreshIfNeeded(resp);
+      if (maybe === null) {
+        const headers2 = { ...(init.headers || {}), ...(getAuthHeaders() || {}) };
+        resp = await fetch(url, { ...init, headers: headers2 });
+      }
+    }
+
+    if (!resp.ok) {
+      const txt = await resp.text().catch(() => "<no body>");
+      console.error("Spotify API error:", resp.status, url, txt);
+      throw new Error(`Spotify API error: ${resp.status}`);
+    }
+    return resp.json();
+  }
+
+  // Probe /recommendations with progressively simpler params
+  async function recommendProbe(paramsObj) {
+    const attempts = [];
+
+    // 1) only seeds
+    attempts.push(new URLSearchParams({ limit: "30", ...paramsObj }));
+
+    // 2) seeds + market=US
+    attempts.push(new URLSearchParams({ limit: "30", market: "US", ...paramsObj }));
+
+    // 3) only first 3 items in whichever seed is present
+    const narrowed = new URLSearchParams({ limit: "30" });
+    for (const k of ["seed_tracks", "seed_artists"]) {
+      if (paramsObj[k]) {
+        narrowed.set(k, paramsObj[k].split(",").slice(0, 3).join(","));
+      }
+    }
+    attempts.push(narrowed);
+
+    let lastErr;
+    for (const qs of attempts) {
+      const path = `/recommendations?${qs.toString()}`;
+      console.log("Trying recommendations:", path);
+      try {
+        return await api(path);
+      } catch (e) {
+        lastErr = e;
+        console.warn("Attempt failed:", path, e.message);
+      }
+    }
+    throw lastErr;
+  }
+
+  // === UI wiring + flows ===
   const loginBtn = document.getElementById("loginBtn");
   const logoutBtn = document.getElementById("logoutBtn");
   const makePlaylistBtn = document.getElementById("makePlaylistBtn");
@@ -115,74 +174,33 @@
     recHeader.classList.toggle("hidden", !isLoggedIn || !lastRecs.length);
   }
 
-  // Robust API helper: normalizes URL, logs on error, refresh-retries once
-  async function api(path, init = {}) {
-    const base = "https://api.spotify.com/v1";
-    const url = path.startsWith("http")
-      ? path
-      : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
-
-    const headers = { ...(init.headers || {}), ...(getAuthHeaders() || {}) };
-    let resp = await fetch(url, { ...init, headers });
-
-    if (resp.status === 401) {
-      const maybe = await refreshIfNeeded(resp);
-      if (maybe === null) {
-        const headers2 = { ...(init.headers || {}), ...(getAuthHeaders() || {}) };
-        resp = await fetch(url, { ...init, headers: headers2 });
-      }
-    }
-
-    if (!resp.ok) {
-      const txt = await resp.text().catch(() => "<no body>");
-      console.error("Spotify API error:", resp.status, url, txt);
-      throw new Error(`Spotify API error: ${resp.status}`);
-    }
-    return resp.json();
-  }
-
-  async function getRecommendationsWithSeeds({ seedTracks = "", seedArtists = "" }) {
-    const params = new URLSearchParams({
-      limit: "30",
-      market: "from_token",
-      target_energy: "0.6",
-      target_valence: "0.6",
-    });
-    if (seedTracks) params.set("seed_tracks", seedTracks);
-    if (seedArtists) params.set("seed_artists", seedArtists);
-
-    const path = `/recommendations?${params.toString()}`;
-    console.log("Recommendations URL:", path);
-    return api(path);
-  }
-
   async function loadRecommendations() {
-    // Try seed_tracks first
+    // Track-based seeds
     statusBox.textContent = "Loading your top tracks…";
-    const topTracks = await api("/me/top/tracks?limit=5&market=from_token");
+    const topTracks = await api("/me/top/tracks?limit=5");
     const seedTracks = (topTracks.items || []).map(t => t.id).slice(0, 5).join(",");
     console.log("Seeds (tracks):", seedTracks);
 
     try {
       if (seedTracks) {
         statusBox.textContent = "Fetching recommendations (tracks)…";
-        const rec = await getRecommendationsWithSeeds({ seedTracks });
+        const rec = await recommendProbe({ seed_tracks: seedTracks });
         lastRecs = rec.tracks || [];
       }
     } catch (e) {
       console.warn("Track-seeded recommendations failed, will try artists.", e);
     }
 
-    // If we still don't have recs, try seed_artists
+    // Artist-based seeds fallback
     if (!lastRecs.length) {
       statusBox.textContent = "Loading your top artists…";
-      const topArtists = await api("/me/top/artists?limit=5&market=from_token");
+      const topArtists = await api("/me/top/artists?limit=5");
       const seedArtists = (topArtists.items || []).map(a => a.id).slice(0, 5).join(",");
       console.log("Seeds (artists):", seedArtists);
 
       if (seedArtists) {
         statusBox.textContent = "Fetching recommendations (artists)…";
-        const rec2 = await getRecommendationsWithSeeds({ seedArtists });
+        const rec2 = await recommendProbe({ seed_artists: seedArtists });
         lastRecs = rec2.tracks || [];
       }
     }
@@ -230,7 +248,7 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ uris })
     });
-    statusBox.innerHTML = `Playlist created: <a href="${pl.external_urls.spotify}" target="_blank" rel="noopener">Open on Spotify</a>`;
+    statusBox.innerHTML = `Playlist created: <a href="${pl.external_urls.spotify}" target="_blank" rel="noopener">Open in Spotify</a>`;
   }
 
   // wire
