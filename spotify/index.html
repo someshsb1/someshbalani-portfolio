@@ -141,34 +141,61 @@
     return resp.json();
   }
 
-async function loadRecommendations() {
-  statusBox.textContent = "Loading your top tracks…";
-  const top = await api("/me/top/tracks?limit=5&market=from_token");
+  async function getRecommendationsWithSeeds({ seedTracks = "", seedArtists = "" }) {
+    const params = new URLSearchParams({
+      limit: "30",
+      market: "from_token",
+      target_energy: "0.6",
+      target_valence: "0.6",
+    });
+    if (seedTracks) params.set("seed_tracks", seedTracks);
+    if (seedArtists) params.set("seed_artists", seedArtists);
 
-  if (!top.items?.length) {
-    statusBox.textContent = "No top tracks available. Try listening more on Spotify first.";
-    return;
+    const path = `/recommendations?${params.toString()}`;
+    console.log("Recommendations URL:", path);
+    return api(path);
   }
 
-  const seed = top.items.map(t => t.id).slice(0, 5).join(",");
-  console.log("Seeds:", seed);
+  async function loadRecommendations() {
+    // Try seed_tracks first
+    statusBox.textContent = "Loading your top tracks…";
+    const topTracks = await api("/me/top/tracks?limit=5&market=from_token");
+    const seedTracks = (topTracks.items || []).map(t => t.id).slice(0, 5).join(",");
+    console.log("Seeds (tracks):", seedTracks);
 
-  if (!seed) {
-    statusBox.textContent = "Could not determine any seed tracks.";
-    return;
+    try {
+      if (seedTracks) {
+        statusBox.textContent = "Fetching recommendations (tracks)…";
+        const rec = await getRecommendationsWithSeeds({ seedTracks });
+        lastRecs = rec.tracks || [];
+      }
+    } catch (e) {
+      console.warn("Track-seeded recommendations failed, will try artists.", e);
+    }
+
+    // If we still don't have recs, try seed_artists
+    if (!lastRecs.length) {
+      statusBox.textContent = "Loading your top artists…";
+      const topArtists = await api("/me/top/artists?limit=5&market=from_token");
+      const seedArtists = (topArtists.items || []).map(a => a.id).slice(0, 5).join(",");
+      console.log("Seeds (artists):", seedArtists);
+
+      if (seedArtists) {
+        statusBox.textContent = "Fetching recommendations (artists)…";
+        const rec2 = await getRecommendationsWithSeeds({ seedArtists });
+        lastRecs = rec2.tracks || [];
+      }
+    }
+
+    if (!lastRecs.length) {
+      statusBox.textContent = "No recommendations found. Try listening more on Spotify and come back.";
+      return;
+    }
+
+    renderRecs(lastRecs);
+    setLoggedInUI(true);
+    statusBox.textContent = `Got ${lastRecs.length} tracks.`;
   }
-
-  statusBox.textContent = "Fetching recommendations…";
-  const rec = await api(
-    `/recommendations?limit=30&market=from_token&seed_tracks=${encodeURIComponent(seed)}&target_energy=0.6&target_valence=0.6`
-  );
-
-  lastRecs = rec.tracks || [];
-  renderRecs(lastRecs);
-  setLoggedInUI(true);
-  statusBox.textContent = `Got ${lastRecs.length} tracks.`;
-}
-
 
   function renderRecs(tracks) {
     recsDiv.innerHTML = "";
