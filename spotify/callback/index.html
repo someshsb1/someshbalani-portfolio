@@ -1,56 +1,75 @@
 <!doctype html>
 <html lang="en">
-<meta charset="utf-8" />
-<title>Spotify Callback</title>
-<body>
-  <p>Completing Spotify login…</p>
-  <script>
-  const CLIENT_ID = "633ae324f0cd47d184d021cb0d35b598";
-  const REDIRECT_BACK = "https://someshbalani.com/spotify/"; // where to return after token exchange
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spotify Callback | Somesh Balani</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/css/site.css" />
+  </head>
+  <body>
+    <div class="page">
+      <main class="container">
+        <section class="section" style="padding-top: 80px;">
+          <div class="card" style="text-align:center;">
+            <div class="badge">Spotify</div>
+            <h2 style="margin-top: 12px;">Completing Spotify login…</h2>
+            <p class="lead">Hold tight while we finish the secure handshake.</p>
+          </div>
+        </section>
+      </main>
+    </div>
 
-  async function exchange() {
-    const params = new URLSearchParams(location.search);
-    const code = params.get("code");
-    const verifier = sessionStorage.getItem("pkce_verifier");
+    <script>
+      const CLIENT_ID = "633ae324f0cd47d184d021cb0d35b598";
+      const REDIRECT_BACK = "https://someshbalani.com/spotify/";
 
-    if (!code || !verifier) {
-      location.replace(REDIRECT_BACK);
-      return;
-    }
+      async function exchange() {
+        const params = new URLSearchParams(location.search);
+        const code = params.get("code");
+        const verifier = sessionStorage.getItem("pkce_verifier");
 
-    const body = new URLSearchParams({
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: "https://someshbalani.com/spotify/callback/", // EXACT match with Dashboard
-      client_id: CLIENT_ID,
-      code_verifier: verifier
-    });
+        if (!code || !verifier) {
+          location.replace(REDIRECT_BACK);
+          return;
+        }
 
-    const res = await fetch("https://accounts.spotify.com/api/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body
-    });
+        const body = new URLSearchParams({
+          grant_type: "authorization_code",
+          code,
+          redirect_uri: "https://someshbalani.com/spotify/callback/",
+          client_id: CLIENT_ID,
+          code_verifier: verifier
+        });
 
-    if (!res.ok) {
-      console.error("Token exchange failed:", await res.text());
-      location.replace(REDIRECT_BACK);
-      return;
-    }
+        const res = await fetch("https://accounts.spotify.com/api/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body
+        });
 
-    const data = await res.json();
-    // Save tokens for the main page
-    localStorage.setItem("spotify_token", JSON.stringify(data.access_token));
-    if (data.refresh_token) {
-      localStorage.setItem("spotify_refresh", JSON.stringify(data.refresh_token));
-    }
+        if (!res.ok) {
+          console.error("Token exchange failed:", await res.text());
+          location.replace(REDIRECT_BACK);
+          return;
+        }
 
-    // Clean the URL and return to main page
-    history.replaceState({}, "", "/spotify/callback/");
-    location.replace(REDIRECT_BACK);
-  }
+        const data = await res.json();
+        localStorage.setItem("spotify_token", JSON.stringify(data.access_token));
+        if (data.refresh_token) {
+          localStorage.setItem("spotify_refresh", JSON.stringify(data.refresh_token));
+        }
 
-  exchange();
-  </script>
-</body>
+        history.replaceState({}, "", "/spotify/callback/");
+        location.replace(REDIRECT_BACK);
+      }
+
+      exchange();
+    </script>
+  </body>
 </html>
