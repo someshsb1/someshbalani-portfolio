@@ -3,8 +3,21 @@
   const navLinks = document.querySelector('.nav-links');
 
   if (navToggle && navLinks) {
+    navLinks.id = navLinks.id || 'site-navigation';
+    navToggle.setAttribute('aria-expanded', 'false');
+    navToggle.setAttribute('aria-label', 'Toggle navigation');
+    navToggle.setAttribute('aria-controls', navLinks.id);
+
     navToggle.addEventListener('click', () => {
-      navLinks.classList.toggle('open');
+      const isOpen = navLinks.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    navLinks.addEventListener('click', (event) => {
+      if (event.target.closest('a')) {
+        navLinks.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+      }
     });
   }
 
@@ -23,14 +36,5 @@
     );
 
     revealItems.forEach((item) => observer.observe(item));
-  }
-
-  if (window.Parallax) {
-    document.querySelectorAll('[data-parallax-scene]').forEach((scene) => {
-      new window.Parallax(scene, {
-        relativeInput: true,
-        hoverOnly: true,
-      });
-    });
   }
 })();

@@ -9,10 +9,10 @@
   --accent-2: #f9c66d;
   --accent-3: #83b7ff;
   --border: rgba(255, 255, 255, 0.12);
-  --shadow: 0 30px 80px rgba(6, 10, 18, 0.45);
-  --radius-xl: 28px;
-  --radius-lg: 20px;
-  --radius-md: 14px;
+  --shadow: 0 18px 48px rgba(6, 10, 18, 0.28);
+  --radius-xl: 18px;
+  --radius-lg: 12px;
+  --radius-md: 10px;
 }
 
 * {
@@ -27,8 +27,8 @@ body {
   margin: 0;
   font-family: "Manrope", system-ui, -apple-system, sans-serif;
   color: var(--ink);
-  background: radial-gradient(1200px 900px at 10% -20%, #1b2a4f 0%, transparent 55%),
-    radial-gradient(1000px 700px at 90% 10%, #1f4e4a 0%, transparent 55%),
+  background: radial-gradient(900px 600px at 10% -20%, rgba(42, 107, 255, 0.22), transparent 55%),
+    radial-gradient(800px 520px at 90% 0%, rgba(71, 242, 196, 0.14), transparent 55%),
     linear-gradient(180deg, var(--bg), var(--bg-2));
   min-height: 100vh;
 }
@@ -49,32 +49,7 @@ img {
 
 .page {
   position: relative;
-  overflow: hidden;
-}
-
-.page::before,
-.page::after {
-  content: "";
-  position: absolute;
-  width: 520px;
-  height: 520px;
-  border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.35;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.page::before {
-  background: #2a6bff;
-  top: -220px;
-  right: -140px;
-}
-
-.page::after {
-  background: #47f2c4;
-  bottom: -240px;
-  left: -160px;
+  overflow-x: hidden;
 }
 
 .container {
@@ -89,6 +64,7 @@ img {
   align-items: center;
   justify-content: space-between;
   padding: 28px 0;
+  z-index: 10;
 }
 
 .brand {
@@ -125,6 +101,7 @@ img {
   padding: 8px 12px;
   border-radius: 999px;
   cursor: pointer;
+  font: inherit;
 }
 
 .hero {
@@ -171,7 +148,7 @@ img {
   display: inline-flex;
   gap: 8px;
   align-items: center;
-  box-shadow: 0 18px 40px rgba(68, 255, 207, 0.25);
+  box-shadow: 0 12px 28px rgba(68, 255, 207, 0.18);
 }
 
 .button.secondary {
@@ -193,7 +170,7 @@ img {
 .hero-card .avatar {
   width: 88px;
   height: 88px;
-  border-radius: 24px;
+  border-radius: 18px;
   overflow: hidden;
   margin-bottom: 18px;
   border: 2px solid rgba(255, 255, 255, 0.15);
@@ -213,53 +190,8 @@ img {
   color: var(--muted);
 }
 
-.parallax-wrap {
-  position: relative;
-  height: 360px;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background: linear-gradient(130deg, rgba(111, 255, 210, 0.2), rgba(35, 62, 120, 0.4));
-}
-
-.parallax-scene {
-  position: absolute;
-  inset: 0;
-}
-
-.parallax-layer {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.parallax-layer .orb {
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  filter: blur(0);
-  opacity: 0.8;
-}
-
-.orb.one {
-  background: radial-gradient(circle at 30% 30%, #6fffd2, transparent 60%);
-  transform: translate(-60px, -50px);
-}
-
-.orb.two {
-  background: radial-gradient(circle at 40% 40%, #83b7ff, transparent 60%);
-  transform: translate(70px, 40px);
-}
-
-.orb.three {
-  background: radial-gradient(circle at 35% 35%, #f9c66d, transparent 60%);
-  transform: translate(-20px, 80px);
-}
-
 .section {
-  padding: 80px 0;
+  padding: 64px 0;
 }
 
 .section h2 {
@@ -292,14 +224,13 @@ img {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 22px;
-  min-height: 180px;
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow);
 }
 
 .card-media {
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 16px;
@@ -453,18 +384,66 @@ img {
   transform: translateY(0);
 }
 
+.mt-sm {
+  margin-top: 16px;
+}
+
+.mt-xs {
+  margin-top: 6px;
+}
+
+.mt-md {
+  margin-top: 26px;
+}
+
+.mt-lg {
+  margin-top: 30px;
+}
+
+.mb-sm {
+  margin-bottom: 8px;
+}
+
+.pt-xl {
+  padding-top: 80px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.lead-center {
+  margin: 0 auto 24px;
+}
+
+.links-center {
+  justify-content: center;
+}
+
+.row-between {
+  justify-content: space-between;
+}
+
+.card-title {
+  margin-top: 0;
+}
+
 @media (max-width: 860px) {
   .nav-links {
     position: absolute;
     top: 74px;
     right: 0;
+    z-index: 20;
     flex-direction: column;
+    align-items: flex-start;
+    min-width: 180px;
     background: rgba(10, 14, 26, 0.96);
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 16px;
     gap: 12px;
     display: none;
+    box-shadow: var(--shadow);
   }
 
   .nav-links.open {
@@ -481,11 +460,19 @@ img {
     padding-bottom: 60px;
   }
 
-  .parallax-wrap {
-    height: 260px;
-  }
-
   .hero-card {
     padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }

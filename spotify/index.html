@@ -8,10 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&amp;family=Sora:wght@400;600;700&amp;display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../assets/css/fontawesome-all.min.css" />
     <link rel="stylesheet" href="../assets/css/site.css" />
     <link rel="stylesheet" href="../assets/css/spotify.css" />
   </head>
@@ -26,9 +25,7 @@
           <a href="../about.html">About</a>
           <a href="../experience.html">Experience</a>
           <a href="../projects.html">Projects</a>
-          <a href="../certificates.html">Certificates</a>
           <a href="../contact.html">Contact</a>
-          <a class="active" href="index.html">Spotify</a>
         </nav>
       </header>
 
@@ -51,58 +48,43 @@
           </div>
           <div class="hero-card reveal">
             <div class="spotify-pill">Public playlists</div>
-            <h3 style="margin-top: 16px;">Som’s picks</h3>
+            <h3 class="mt-sm">Som’s picks</h3>
             <p class="muted">
               A few curated moods — loud, calm, and everything in between.
             </p>
           </div>
         </section>
-
-        <section class="parallax-wrap reveal" style="margin-bottom: 40px;">
-          <div class="parallax-scene" data-parallax-scene>
-            <div class="parallax-layer" data-depth="0.18">
-              <div class="orb one"></div>
-            </div>
-            <div class="parallax-layer" data-depth="0.33">
-              <div class="orb two"></div>
-            </div>
-            <div class="parallax-layer" data-depth="0.48">
-              <div class="orb three"></div>
-            </div>
-          </div>
-        </section>
-
         <section class="section">
           <div class="card spotify-card reveal">
-            <h3 style="margin-top:0;">Som’s Public Playlists</h3>
+            <h3 class="card-title">Som’s Public Playlists</h3>
             <div id="playlistsGrid" class="playlist-grid"></div>
           </div>
         </section>
 
         <section class="section">
           <div id="profile" class="card spotify-card hidden reveal">
-            <h3 style="margin-top:0;">Your Spotify Profile</h3>
+            <h3 class="card-title">Your Spotify Profile</h3>
             <div id="profileCard"></div>
           </div>
         </section>
 
         <section class="section">
           <div id="top" class="card spotify-card hidden reveal">
-            <div class="row" style="justify-content:space-between;">
-              <h3 style="margin:0;">Your Top Tracks</h3>
+            <div class="row row-between">
+              <h3 class="card-title">Your Top Tracks</h3>
               <button id="topPlaylistBtn" class="button secondary">Save Top Tracks as Playlist</button>
             </div>
-            <div id="topList" class="spotify-grid" style="margin-top:16px;"></div>
+            <div id="topList" class="spotify-grid mt-sm"></div>
           </div>
         </section>
 
         <section class="section">
           <div id="recs" class="card spotify-card hidden reveal">
-            <div class="row" style="justify-content:space-between;">
-              <h3 style="margin:0;">Recommended For You</h3>
+            <div class="row row-between">
+              <h3 class="card-title">Recommended For You</h3>
               <button id="recsPlaylistBtn" class="button secondary">Save Recommendations as Playlist</button>
             </div>
-            <div class="muted" id="recsNote" style="margin-bottom:8px;"></div>
+            <div class="muted mb-sm" id="recsNote"></div>
             <div id="recsList" class="spotify-grid"></div>
           </div>
         </section>
@@ -113,6 +95,8 @@
           <div class="footer-links">
             <a href="https://www.instagram.com/somesh.balani/">Instagram</a>
             <a href="https://github.com/someshsb1">GitHub</a>
+            <a href="../certificates.html">Certificates</a>
+            <a href="index.html">Spotify</a>
             <a href="mailto:somesh.balani001@umb.edu">Email</a>
             <a href="https://www.linkedin.com/in/someshbalani">LinkedIn</a>
           </div>
@@ -120,8 +104,6 @@
         </div>
       </footer>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/parallax-js@3.1.0/dist/parallax.min.js"></script>
     <script src="../assets/js/site.js"></script>
 
     <script>
@@ -139,7 +121,7 @@
           const card = document.createElement("div");
           card.className = "card";
           card.innerHTML = `
-            <div class="row" style="justify-content: space-between;">
+            <div class="row row-between">
               <strong>${p.label}</strong>
               <a target="_blank" rel="noopener" href="https://open.spotify.com/playlist/${p.id}">Open</a>
             </div>
@@ -270,7 +252,7 @@
               <div><strong>${p.display_name || "(no display name)"}</strong> <span class="muted">(${p.id})</span></div>
               ${p.email ? `<div>${p.email.replace(/</g, "&lt;")}</div>` : ""}
               <div>Country: ${p.country || "—"} • Product: ${p.product || "—"}</div>
-              <div style="margin-top:6px;"><a href="${p.external_urls?.spotify}" target="_blank" rel="noopener">Open Spotify Profile</a></div>
+              <div class="mt-xs"><a href="${p.external_urls?.spotify}" target="_blank" rel="noopener">Open Spotify Profile</a></div>
             </div>
           </div>
         `;
@@ -286,7 +268,7 @@
           div.className = "track";
           div.innerHTML = `
             <div class="row">
-              ${img ? `<img src="${img}" width="56" height="56" style="border-radius:8px;object-fit:cover;" alt="">` : ""}
+              ${img ? `<img class="track-cover" src="${img}" width="56" height="56" alt="">` : ""}
               <div>
                 <div><strong>${t.name}</strong></div>
                 <div class="muted">${artists}</div>
