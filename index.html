@@ -8,6 +8,13 @@
       name="description"
       content="Somesh Balani is a data analyst focused on turning complex datasets into clear insights and visual stories."
     />
+    <meta property="og:title" content="Somesh Balani | Data Analyst Portfolio" />
+    <meta
+      property="og:description"
+      content="Data analyst portfolio focused on risk analytics, BI dashboards, SQL, Snowflake, Tableau, Power BI, and D3.js."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://someshbalani.com/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -17,12 +24,13 @@
     <link rel="stylesheet" href="assets/css/site.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <div class="page">
       <header class="container nav">
         <a class="brand" href="index.html">Somesh</a>
         <button class="nav-toggle" type="button">Menu</button>
         <nav class="nav-links">
-          <a class="active" href="index.html">Home</a>
+          <a class="active" aria-current="page" href="index.html">Home</a>
           <a href="about.html">About</a>
           <a href="experience.html">Experience</a>
           <a href="projects.html">Projects</a>
@@ -30,7 +38,7 @@
         </nav>
       </header>
 
-      <main class="container">
+      <main id="main" class="container">
         <section class="hero">
           <div class="reveal">
             <div class="eyebrow">Data Analyst | Risk Analytics | BI</div>
@@ -44,6 +52,8 @@
               <a
                 class="button secondary"
                 href="https://drive.google.com/file/d/1WqDht3SsjIoXJl3foMWHTki6bllf7qNK/view?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
                 >Download Resume</a>
             </div>
           </div>
@@ -52,38 +62,65 @@
               <img src="images/avatar.jpg" alt="Somesh Balani" />
             </div>
             <p>
-              Fintech risk and analytics experience across Razorpay, Open Financials, Easebuzz, and research analytics
-              work at Cold Spring Harbor Laboratory.
+              Fintech risk and analytics experience across Razorpay, Open Financial Technologies, Easebuzz, and
+              research analytics work at Cold Spring Harbor Laboratory.
             </p>
             <div class="tags">
               <span class="tag">SQL</span>
               <span class="tag">Tableau</span>
-              <span class="tag">PowerBI</span>
+              <span class="tag">Power BI</span>
               <span class="tag">Snowflake</span>
               <span class="tag">D3.js</span>
               <span class="tag">Looker</span>
             </div>
           </div>
         </section>
+
+        <section class="proof-bar reveal" aria-label="Portfolio highlights">
+          <div class="proof-item">
+            <strong>5+ years</strong>
+            <span>Analytics, risk, and data storytelling</span>
+          </div>
+          <div class="proof-item">
+            <strong>Fintech risk</strong>
+            <span>Razorpay, Open Financial Technologies, Easebuzz</span>
+          </div>
+          <div class="proof-item">
+            <strong>BI stack</strong>
+            <span>SQL, Snowflake, Tableau, Power BI</span>
+          </div>
+          <div class="proof-item">
+            <strong>NYC-based</strong>
+            <span>Open to data and analytics roles</span>
+          </div>
+        </section>
+
         <section class="section">
-          <h2 class="reveal">Focused on measurable analytics work</h2>
+          <h2 class="reveal">Analytics work built for decisions</h2>
           <p class="lead reveal">
             I help teams understand what changed, why it matters, and what to do next. The portfolio highlights risk
             analytics, business intelligence, and interactive data visualization work.
           </p>
-          <div class="grid two mt-lg">
+          <div class="grid three mt-lg">
             <div class="card reveal">
-              <div class="badge">Now</div>
-              <h3>MS Computer Science</h3>
+              <div class="badge">Risk Analytics</div>
+              <h3>Fraud and operational signal</h3>
               <p>
-                Graduated May 2024 from UMass Boston. Open to roles where analytics and engineering converge.
+                Analyze transaction and product data to surface risk patterns, process gaps, and decision points.
               </p>
             </div>
             <div class="card reveal">
-              <div class="badge">Focus</div>
-              <h3>Risk + BI Storytelling</h3>
+              <div class="badge">BI Dashboards</div>
+              <h3>Reliable reporting systems</h3>
               <p>
-                I design dashboards and interactive visuals that make trends, anomalies, and tradeoffs easy to scan.
+                Build dashboards and KPI views that help stakeholders track change without digging through raw data.
+              </p>
+            </div>
+            <div class="card reveal">
+              <div class="badge">Visualization</div>
+              <h3>Interactive data stories</h3>
+              <p>
+                Use Tableau, D3.js, SVG, and Vega-Lite to make trends, anomalies, and tradeoffs easier to scan.
               </p>
             </div>
           </div>
@@ -92,43 +129,59 @@
         <section class="section">
           <h2 class="reveal">Featured Work</h2>
           <div class="grid three mt-md">
-            <div class="card project-card reveal">
+            <div class="card project-card featured-card reveal">
               <div class="card-media">
                 <img loading="lazy" src="images/thumbs/01.jpg" alt="Boston Rainfall DataViz preview" />
               </div>
               <div class="badge">D3.js</div>
               <h3>Boston Rainfall DataViz</h3>
-              <p>Interactive rainfall exploration powered by D3.js.</p>
+              <div class="project-meta">
+                <span>D3.js</span>
+                <span>Interaction design</span>
+                <span>Trend analysis</span>
+              </div>
+              <p>Interactive rainfall exploration that helps viewers compare seasonal patterns and spot extremes.</p>
               <div class="project-links">
-                <a href="https://someshsb1.github.io/boston-rainfall-dataViz-D3/">Visualize</a>
-                <a href="https://github.com/someshsb1/boston-rainfall-dataViz-D3/blob/main/index.html">Source Code</a>
+                <a href="https://someshsb1.github.io/boston-rainfall-dataViz-D3/" target="_blank" rel="noopener noreferrer">Visualize</a>
+                <a href="https://github.com/someshsb1/boston-rainfall-dataViz-D3/blob/main/index.html" target="_blank" rel="noopener noreferrer">Source Code</a>
                 <a href="case-boston.html">Case Study</a>
               </div>
             </div>
-            <div class="card project-card reveal">
+            <div class="card project-card featured-card reveal">
               <div class="card-media">
                 <img loading="lazy" src="images/thumbs/10.jpg" alt="UMass Boston Tableau visualization" />
               </div>
               <div class="badge">Tableau</div>
               <h3>UMass Boston Visualization</h3>
-              <p>Coach vs faculty insights and storytelling in Tableau.</p>
+              <div class="project-meta">
+                <span>Tableau</span>
+                <span>Dashboard design</span>
+                <span>Stakeholder view</span>
+              </div>
+              <p>Dashboard story comparing campus metrics in a format built for quick stakeholder review.</p>
               <div class="project-links">
-                <a href="https://someshsb1.github.io/visualsUMB_2/">View</a>
-                <a href="https://github.com/someshsb1/visualsUMB_2">Source Code</a>
+                <a href="https://someshsb1.github.io/visualsUMB_2/" target="_blank" rel="noopener noreferrer">View</a>
+                <a href="https://github.com/someshsb1/visualsUMB_2" target="_blank" rel="noopener noreferrer">Source Code</a>
                 <a href="case-umb.html">Case Study</a>
               </div>
             </div>
-            <div class="card project-card reveal">
+            <div class="card project-card featured-card reveal">
               <div class="card-media">
-                <img loading="lazy" src="images/thumbs/04.jpg" alt="Weather app interface" />
+                <img loading="lazy" src="images/thumbs/03.jpg" alt="Credit card fraud analysis visualization" />
               </div>
-              <div class="badge">Open Source</div>
-              <h3>Weather App</h3>
-              <p>Fully functional, real-time weather experience.</p>
+              <div class="badge">Analytics</div>
+              <h3>Credit Card Fraud Analysis</h3>
+              <div class="project-meta">
+                <span>Python</span>
+                <span>Fraud detection</span>
+                <span>Model analysis</span>
+              </div>
+              <p>Notebook-based fraud analysis focused on classification signals and explainable risk patterns.</p>
               <div class="project-links">
-                <a href="https://someshsb1.github.io/weather-app/">WeatherApp</a>
-                <a href="https://github.com/someshsb1/weather-app">Source Code</a>
-                <a href="case-weather.html">Case Study</a>
+                <a href="https://github.com/someshsb1/FraudTransactionDetectionAnalysis/blob/main/Credit_Card_Fraud_Detection.ipynb"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Source Code</a>
               </div>
             </div>
           </div>
@@ -151,13 +204,15 @@
 
       <footer class="footer">
         <div class="container">
-          <div class="footer-links">
-            <a href="https://www.instagram.com/somesh.balani/">Instagram</a>
-            <a href="https://github.com/someshsb1">GitHub</a>
-            <a href="certificates.html">Certificates</a>
-            <a href="https://someshbalani.com/spotify">Spotify</a>
+          <div class="footer-links primary">
             <a href="mailto:somesh.balani001@umb.edu">Email</a>
-            <a href="https://www.linkedin.com/in/someshbalani">LinkedIn</a>
+            <a href="https://www.linkedin.com/in/someshbalani" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="https://github.com/someshsb1" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </div>
+          <div class="footer-links secondary">
+            <a href="certificates.html">Certificates</a>
+            <a href="https://someshbalani.com/spotify" target="_blank" rel="noopener noreferrer">Spotify</a>
+            <a href="https://www.instagram.com/somesh.balani/" target="_blank" rel="noopener noreferrer">Instagram</a>
           </div>
           <small>&copy; someshbalani</small>
         </div>

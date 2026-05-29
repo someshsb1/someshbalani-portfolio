@@ -13,8 +13,9 @@
     <link rel="stylesheet" href="../../assets/css/site.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <div class="page">
-      <main class="container">
+      <main id="main" class="container">
         <section class="section pt-xl">
           <div class="card text-center">
             <div class="badge">Spotify</div>
@@ -60,9 +61,9 @@
         }
 
         const data = await res.json();
-        localStorage.setItem("spotify_token", JSON.stringify(data.access_token));
+        sessionStorage.setItem("spotify_token", JSON.stringify(data.access_token));
         if (data.refresh_token) {
-          localStorage.setItem("spotify_refresh", JSON.stringify(data.refresh_token));
+          sessionStorage.setItem("spotify_refresh", JSON.stringify(data.refresh_token));
         }
 
         history.replaceState({}, "", "/spotify/callback/");

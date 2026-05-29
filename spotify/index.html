@@ -16,6 +16,7 @@
   </head>
 
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <div class="page spotify-page">
       <header class="container nav">
         <a class="brand" href="../index.html">Somesh</a>
@@ -29,7 +30,7 @@
         </nav>
       </header>
 
-      <main class="container">
+      <main id="main" class="container">
         <section class="spotify-hero">
           <div class="reveal">
             <div class="eyebrow">Soundtrack</div>
@@ -92,13 +93,15 @@
 
       <footer class="footer">
         <div class="container">
-          <div class="footer-links">
-            <a href="https://www.instagram.com/somesh.balani/">Instagram</a>
-            <a href="https://github.com/someshsb1">GitHub</a>
+          <div class="footer-links primary">
+            <a href="mailto:somesh.balani001@umb.edu">Email</a>
+            <a href="https://www.linkedin.com/in/someshbalani" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="https://github.com/someshsb1" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </div>
+          <div class="footer-links secondary">
             <a href="../certificates.html">Certificates</a>
             <a href="index.html">Spotify</a>
-            <a href="mailto:somesh.balani001@umb.edu">Email</a>
-            <a href="https://www.linkedin.com/in/someshbalani">LinkedIn</a>
+            <a href="https://www.instagram.com/somesh.balani/" target="_blank" rel="noopener noreferrer">Instagram</a>
           </div>
           <small>&copy; someshbalani</small>
         </div>
@@ -123,7 +126,7 @@
           card.innerHTML = `
             <div class="row row-between">
               <strong>${p.label}</strong>
-              <a target="_blank" rel="noopener" href="https://open.spotify.com/playlist/${p.id}">Open</a>
+              <a target="_blank" rel="noopener noreferrer" href="https://open.spotify.com/playlist/${p.id}">Open</a>
             </div>
             <div class="embed-wrap">
               <iframe class="embed-iframe"
@@ -144,6 +147,7 @@
       const CLIENT_ID = "633ae324f0cd47d184d021cb0d35b598";
       const REDIRECT_URI = "https://someshbalani.com/spotify/callback/";
       const SCOPES = ["user-read-email", "user-top-read", "playlist-modify-private"].join(" ");
+      const tokenStorage = sessionStorage;
 
       function b64url(buffer) {
         return btoa(String.fromCharCode(...new Uint8Array(buffer)))
@@ -163,23 +167,39 @@
       const refreshKey = "spotify_refresh";
       const getToken = () => {
         try {
-          return JSON.parse(localStorage.getItem(tokenKey) || "null");
+          return JSON.parse(tokenStorage.getItem(tokenKey) || "null");
         } catch {
           return null;
         }
       };
       function setTokens(access, refresh) {
-        if (access) localStorage.setItem(tokenKey, JSON.stringify(access));
-        if (refresh) localStorage.setItem(refreshKey, JSON.stringify(refresh));
+        if (access) tokenStorage.setItem(tokenKey, JSON.stringify(access));
+        if (refresh) tokenStorage.setItem(refreshKey, JSON.stringify(refresh));
       }
       function clearTokens() {
-        localStorage.removeItem(tokenKey);
-        localStorage.removeItem(refreshKey);
+        tokenStorage.removeItem(tokenKey);
+        tokenStorage.removeItem(refreshKey);
+      }
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+      function safeUrl(value) {
+        try {
+          const url = new URL(value);
+          return url.protocol === "https:" ? url.href : "";
+        } catch {
+          return "";
+        }
       }
 
       async function refreshIfNeeded(resp) {
         if (resp.status !== 401) return resp;
-        const rt = JSON.parse(localStorage.getItem(refreshKey) || "null");
+        const rt = JSON.parse(tokenStorage.getItem(refreshKey) || "null");
         if (!rt) return resp;
         const body = new URLSearchParams({ grant_type: "refresh_token", refresh_token: rt, client_id: CLIENT_ID });
         const r = await fetch("https://accounts.spotify.com/api/token", {
@@ -244,15 +264,16 @@
       }
 
       function renderProfile(p) {
-        const img = (p.images && p.images[0] && p.images[0].url) || "";
+        const img = safeUrl((p.images && p.images[0] && p.images[0].url) || "");
+        const profileUrl = safeUrl(p.external_urls?.spotify);
         profileCard.innerHTML = `
           <div class="row">
             ${img ? `<img class="avatar" src="${img}" alt="avatar" />` : ""}
             <div>
-              <div><strong>${p.display_name || "(no display name)"}</strong> <span class="muted">(${p.id})</span></div>
-              ${p.email ? `<div>${p.email.replace(/</g, "&lt;")}</div>` : ""}
-              <div>Country: ${p.country || "—"} • Product: ${p.product || "—"}</div>
-              <div class="mt-xs"><a href="${p.external_urls?.spotify}" target="_blank" rel="noopener">Open Spotify Profile</a></div>
+              <div><strong>${escapeHtml(p.display_name || "(no display name)")}</strong> <span class="muted">(${escapeHtml(p.id)})</span></div>
+              ${p.email ? `<div>${escapeHtml(p.email)}</div>` : ""}
+              <div>Country: ${escapeHtml(p.country || "-")} &bull; Product: ${escapeHtml(p.product || "-")}</div>
+              ${profileUrl ? `<div class="mt-xs"><a href="${profileUrl}" target="_blank" rel="noopener noreferrer">Open Spotify Profile</a></div>` : ""}
             </div>
           </div>
         `;
@@ -263,16 +284,17 @@
         container.innerHTML = "";
         tracks.forEach((t) => {
           const artists = (t.artists || []).map((a) => a.name).join(", ");
-          const img = t.album?.images?.[2]?.url || t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || "";
+          const img = safeUrl(t.album?.images?.[2]?.url || t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || "");
+          const trackUrl = safeUrl(t.external_urls?.spotify);
           const div = document.createElement("div");
           div.className = "track";
           div.innerHTML = `
             <div class="row">
               ${img ? `<img class="track-cover" src="${img}" width="56" height="56" alt="">` : ""}
               <div>
-                <div><strong>${t.name}</strong></div>
-                <div class="muted">${artists}</div>
-                <div><a href="${t.external_urls?.spotify}" target="_blank" rel="noopener">Open</a></div>
+                <div><strong>${escapeHtml(t.name)}</strong></div>
+                <div class="muted">${escapeHtml(artists)}</div>
+                ${trackUrl ? `<div><a href="${trackUrl}" target="_blank" rel="noopener noreferrer">Open</a></div>` : ""}
               </div>
             </div>
           `;
@@ -393,7 +415,18 @@
       topPlaylistBtn.addEventListener("click", async () => {
         try {
           const url = await createPlaylist("Som – Top Tracks", lastTopTracks);
-          if (url) statusBox.innerHTML = `Playlist created: <a href="${url}" target="_blank" rel="noopener">Open on Spotify</a>`;
+          if (url) {
+            const safePlaylistUrl = safeUrl(url);
+            statusBox.textContent = "Playlist created: ";
+            if (safePlaylistUrl) {
+              const link = document.createElement("a");
+              link.href = safePlaylistUrl;
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              link.textContent = "Open on Spotify";
+              statusBox.appendChild(link);
+            }
+          }
         } catch (e) {
           statusBox.textContent = e.message;
         }
@@ -401,7 +434,18 @@
       recsPlaylistBtn.addEventListener("click", async () => {
         try {
           const url = await createPlaylist("Som – Recommendations", lastRecs);
-          if (url) statusBox.innerHTML = `Playlist created: <a href="${url}" target="_blank" rel="noopener">Open on Spotify</a>`;
+          if (url) {
+            const safePlaylistUrl = safeUrl(url);
+            statusBox.textContent = "Playlist created: ";
+            if (safePlaylistUrl) {
+              const link = document.createElement("a");
+              link.href = safePlaylistUrl;
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              link.textContent = "Open on Spotify";
+              statusBox.appendChild(link);
+            }
+          }
         } catch (e) {
           statusBox.textContent = e.message;
         }

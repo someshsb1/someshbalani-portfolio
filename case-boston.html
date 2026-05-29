@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="assets/css/site.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <div class="page">
       <header class="container nav">
         <a class="brand" href="index.html">Somesh</a>
@@ -25,26 +26,33 @@
           <a href="index.html">Home</a>
           <a href="about.html">About</a>
           <a href="experience.html">Experience</a>
-          <a class="active" href="projects.html">Projects</a>
+          <a class="active" aria-current="page" href="projects.html">Projects</a>
           <a href="contact.html">Contact</a>
         </nav>
       </header>
 
-      <main class="container">
+      <main id="main" class="container">
         <section class="section">
-          <div class="card reveal">
+          <div class="case-hero reveal">
+            <div class="card">
+              <div class="badge">Case Study</div>
+              <h2>Boston Rainfall DataViz</h2>
+              <p class="lead">
+                An interactive D3.js visualization that turns rainfall observations into a clearer comparison of
+                seasonal movement, peaks, and quieter periods.
+              </p>
+              <div class="project-meta">
+                <span>D3.js</span>
+                <span>SVG</span>
+                <span>Exploratory visualization</span>
+              </div>
+              <div class="project-links">
+                <a href="https://someshsb1.github.io/boston-rainfall-dataViz-D3/" target="_blank" rel="noopener noreferrer">View project</a>
+                <a href="https://github.com/someshsb1/boston-rainfall-dataViz-D3/blob/main/index.html" target="_blank" rel="noopener noreferrer">Source code</a>
+              </div>
+            </div>
             <div class="card-media">
               <img loading="lazy" src="images/fulls/01.jpg" alt="Boston Rainfall DataViz" />
-            </div>
-            <div class="badge">Case Study</div>
-            <h2>Boston Rainfall DataViz</h2>
-            <p class="lead">
-              An interactive D3.js visualization that explores rainfall patterns in Boston and makes long-term trends
-              easy to scan.
-            </p>
-            <div class="project-links">
-              <a href="https://someshsb1.github.io/boston-rainfall-dataViz-D3/">View project</a>
-              <a href="https://github.com/someshsb1/boston-rainfall-dataViz-D3/blob/main/index.html">Source code</a>
             </div>
           </div>
         </section>
@@ -54,12 +62,12 @@
             <div class="card reveal">
               <div class="badge">Role</div>
               <h3>Data analyst + front-end developer</h3>
-              <p>Built the visualization, structured the dataset, and shaped the narrative flow.</p>
+              <p>Prepared the data, built the visualization, and shaped the page around comparison-first reading.</p>
             </div>
             <div class="card reveal">
               <div class="badge">Tools</div>
               <h3>D3.js, SVG, JavaScript</h3>
-              <p>Focused on interactive charts, transitions, and clear labeling.</p>
+              <p>Used SVG marks, hover states, and direct labels to keep the chart readable.</p>
             </div>
             <div class="card reveal">
               <div class="badge">Focus</div>
@@ -70,15 +78,27 @@
         </section>
 
         <section class="section">
-          <h2 class="reveal">Story arc</h2>
+          <h2 class="reveal">Project Breakdown</h2>
           <div class="grid two mt-md">
             <div class="card reveal">
-              <h3>Goal</h3>
-              <p>Turn raw rainfall data into a story that highlights long-term shifts and extremes.</p>
+              <div class="badge">Problem</div>
+              <h3>Rainfall data is hard to compare quickly</h3>
+              <p>Monthly and seasonal patterns can disappear in raw tables, especially when viewers need to compare many periods.</p>
             </div>
             <div class="card reveal">
-              <h3>Approach</h3>
-              <p>Combined interactive tooltips, annotated peaks, and a layered view for quick comparison.</p>
+              <div class="badge">Data</div>
+              <h3>Structured rainfall observations</h3>
+              <p>Worked from the project dataset, normalized fields for charting, and organized the view around monthly comparison.</p>
+            </div>
+            <div class="card reveal">
+              <div class="badge">Method</div>
+              <h3>Interactive D3.js charting</h3>
+              <p>Combined SVG marks, tooltips, and visual hierarchy to make exploration precise without adding interface clutter.</p>
+            </div>
+            <div class="card reveal">
+              <div class="badge">Result</div>
+              <h3>Faster pattern recognition</h3>
+              <p>The final view reduces table-reading effort by making peaks, quieter periods, and seasonal shifts visible in one screen.</p>
             </div>
           </div>
         </section>
@@ -91,8 +111,8 @@
               <p>Color cues and spacing emphasize monthly patterns without sacrificing precision.</p>
             </div>
             <div class="card reveal">
-              <h3>Interactive discovery</h3>
-              <p>Hover states and annotations keep the viewer oriented while they explore.</p>
+              <h3>Clear next step</h3>
+              <p>Add summary statistics, source notes, and year-over-year controls for a stronger analytical read.</p>
             </div>
           </div>
         </section>
@@ -103,7 +123,7 @@
             <p class="lead lead-center">Dive into the full archive of analytics and visualization.</p>
             <div class="project-links links-center">
               <a class="button secondary" href="projects.html">Back to projects</a>
-              <a class="button secondary" href="case-weather.html">Next case study</a>
+              <a class="button secondary" href="case-umb.html">Next case study</a>
             </div>
           </div>
         </section>
@@ -111,13 +131,15 @@
 
       <footer class="footer">
         <div class="container">
-          <div class="footer-links">
-            <a href="https://www.instagram.com/somesh.balani/">Instagram</a>
-            <a href="https://github.com/someshsb1">GitHub</a>
-            <a href="certificates.html">Certificates</a>
-            <a href="https://someshbalani.com/spotify">Spotify</a>
+          <div class="footer-links primary">
             <a href="mailto:somesh.balani001@umb.edu">Email</a>
-            <a href="https://www.linkedin.com/in/someshbalani">LinkedIn</a>
+            <a href="https://www.linkedin.com/in/someshbalani" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="https://github.com/someshsb1" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </div>
+          <div class="footer-links secondary">
+            <a href="certificates.html">Certificates</a>
+            <a href="https://someshbalani.com/spotify" target="_blank" rel="noopener noreferrer">Spotify</a>
+            <a href="https://www.instagram.com/somesh.balani/" target="_blank" rel="noopener noreferrer">Instagram</a>
           </div>
           <small>&copy; someshbalani</small>
         </div>

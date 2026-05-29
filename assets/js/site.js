@@ -22,7 +22,8 @@
   }
 
   const revealItems = document.querySelectorAll('.reveal');
-  if (revealItems.length) {
+  if (revealItems.length && 'IntersectionObserver' in window) {
+    document.documentElement.classList.add('js-reveal');
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
